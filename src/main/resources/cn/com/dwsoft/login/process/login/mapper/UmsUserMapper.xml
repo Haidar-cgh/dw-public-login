@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.com.dwsoft.login.process.login.mapper.UmsUserMapper">
+	<resultMap id="BaseResultMap" type="cn.com.dwsoft.authority.pojo.User">
+		<id column="ID" jdbcType="VARCHAR" property="id" />
+		<result column="ID" jdbcType="VARCHAR" property="userId" />
+		<result column="LOGIN_NAME" jdbcType="VARCHAR" property="name" />
+		<result column="PASSWORD" jdbcType="VARCHAR" property="password" />
+		<result column="REAL_NAME" jdbcType="VARCHAR" property="realName" />
+		<result column="SEX" jdbcType="VARCHAR" property="sex" />
+		<result column="EMAIL" jdbcType="VARCHAR" property="email" />
+		<result column="PHONE" jdbcType="VARCHAR" property="phone" />
+		<result column="DESCRIPTION" jdbcType="VARCHAR" property="description" />
+		<result column="LOGIN_FLAG" jdbcType="VARCHAR" property="loginFlag" />
+		<result column="LAST_LOGIN_TIME" jdbcType="TIMESTAMP" property="lastLoginTime" />
+		<result column="CREATE_TIME" jdbcType="TIMESTAMP" property="createTime" />
+		<result column="SID" jdbcType="VARCHAR" property="sid" />
+		<result column="MLOGIN_FLAG" jdbcType="CHAR" property="mloginFlag" />
+		<result column="DUTY_TYPE" jdbcType="VARCHAR" property="dutyType" />
+		<result column="PARENT_ID" jdbcType="DECIMAL" property="parentId" />
+		<result column="USER_STATUS" jdbcType="DECIMAL" property="userStatus" />
+		<result column="USER_TYPE" jdbcType="VARCHAR" property="userType" />
+		<result column="VIEW_TYPE_ID" jdbcType="VARCHAR" property="viewTypeId" />
+		<result column="LOCK_TIME" jdbcType="TIMESTAMP" property="lockTime" />
+		<result column="FREEZE_FLAG" jdbcType="CHAR" property="freeze_flag" />
+		<result column="DISPLAY_NAME" jdbcType="VARCHAR" property="displayName" />
+		<collection property="roleList" select="qryUseRoleList"
+			column="{userId=ID}" />
+	</resultMap>
+    <resultMap id="BaseLoginResultMap" type="cn.com.dwsoft.authority.pojo.User">
+        <id column="ID" jdbcType="DECIMAL" property="id" />
+        <result column="ID" jdbcType="DECIMAL" property="userId" />
+        <result column="LOGIN_NAME" jdbcType="VARCHAR" property="name" />
+        <result column="PASSWORD" jdbcType="VARCHAR" property="password" />
+        <result column="REAL_NAME" jdbcType="VARCHAR" property="realName" />
+        <result column="SEX" jdbcType="DECIMAL" property="sex" />
+        <result column="EMAIL" jdbcType="VARCHAR" property="email" />
+        <result column="PHONE" jdbcType="VARCHAR" property="phone" />
+        <result column="DESCRIPTION" jdbcType="VARCHAR" property="description" />
+        <result column="LOGIN_FLAG" jdbcType="DECIMAL" property="loginFlag" />
+        <result column="LAST_LOGIN_TIME" jdbcType="TIMESTAMP" property="lastLoginTime" />
+        <result column="CREATE_TIME" jdbcType="TIMESTAMP" property="createTime" />
+        <result column="SID" jdbcType="VARCHAR" property="sid" />
+        <result column="MLOGIN_FLAG" jdbcType="CHAR" property="mloginFlag" />
+        <result column="DUTY_TYPE" jdbcType="VARCHAR" property="dutyType" />
+        <result column="PARENT_ID" jdbcType="DECIMAL" property="parentId" />
+        <result column="USER_STATUS" jdbcType="DECIMAL" property="userStatus" />
+        <result column="USER_TYPE" jdbcType="VARCHAR" property="userType" />
+        <result column="VIEW_TYPE_ID" jdbcType="VARCHAR" property="viewTypeId" />
+        <result column="LOCK_TIME" jdbcType="TIMESTAMP" property="lockTime" />
+        <result column="FREEZE_FLAG" jdbcType="CHAR" property="freeze_flag" />
+        <result column="DISPLAY_NAME" jdbcType="VARCHAR" property="displayName" />
+        <result column="defaultDataType" jdbcType="VARCHAR" property="dataType" />
+        <result column="defaultSystemID" jdbcType="VARCHAR" property="systemID" />
+<!--        <collection property="roleList" select="qryUseRoleList"-->
+<!--                    column="{userId=ID}" />-->
+    </resultMap>
+
+	<select id="qryUseRoleList" parameterType="Map" resultType="cn.com.dwsoft.authority.pojo.Role">
+		SELECT R.ID, R.DISPLAY_NAME DISPLAYNAME, R.DESCRIPTION
+		FROM UMS_ROLE R, UMS_USER_ROLE T
+		WHERE 1 = 1
+		AND R.ID = T.ROLE_ID
+		AND T.USER_ID = #{userId,jdbcType=DECIMAL}
+	</select>
+
+	<sql id="Base_Column_List">
+		ID, LOGIN_NAME, PASSWORD, REAL_NAME, SEX, EMAIL, PHONE, DESCRIPTION,
+		LOGIN_FLAG, LAST_LOGIN_TIME, CREATE_TIME, SID, MLOGIN_FLAG, DUTY_TYPE,
+		VIEW_TYPE_ID, PARENT_ID, USER_STATUS, LOCK_TIME, FREEZE_FLAG
+	</sql>
+
+    <select id="getUserByLoginName" parameterType="java.lang.String"
+            resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        FROM UMS_USER
+        where LOGIN_NAME = #{loginName,jdbcType=VARCHAR}
+    </select>
+
+	<insert id="insertSelective" parameterType="cn.com.dwsoft.authority.pojo.User">
+		insert into UMS_USER
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				ID,
+			</if>
+			<if test="name != null">
+				LOGIN_NAME,
+			</if>
+			<if test="password != null">
+				PASSWORD,
+			</if>
+			<if test="realName != null">
+				REAL_NAME,
+			</if>
+			<if test="sex != null">
+				SEX,
+			</if>
+			<if test="email != null">
+				EMAIL,
+			</if>
+			<if test="phone != null">
+				PHONE,
+			</if>
+			<if test="description != null">
+				DESCRIPTION,
+			</if>
+			<if test="loginFlag != null">
+				LOGIN_FLAG,
+			</if>
+			<if test="lastLoginTime != null">
+				LAST_LOGIN_TIME,
+			</if>
+			<if test="createTime != null">
+				CREATE_TIME,
+			</if>
+			<if test="sid != null">
+				SID,
+			</if>
+			<if test="mloginFlag != null">
+				MLOGIN_FLAG,
+			</if>
+			<if test="dutyType != null">
+				DUTY_TYPE,
+			</if>
+			<if test="parentId != null">
+				PARENT_ID,
+			</if>
+			<if test="userStatus != null">
+				USER_STATUS,
+			</if>
+			<if test="viewTypeId != null">
+				VIEW_TYPE_ID,
+			</if>
+			<if test="lockTime != null">
+				LOCK_TIME,
+			</if>
+			<if test="freeze_flag != null">
+				freeze_flag,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=VARCHAR},
+			</if>
+			<if test="name != null">
+				#{name,jdbcType=VARCHAR},
+			</if>
+			<if test="password != null">
+				#{password,jdbcType=VARCHAR},
+			</if>
+			<if test="realName != null">
+				#{realName,jdbcType=VARCHAR},
+			</if>
+			<if test="sex != null">
+				#{sex,jdbcType=DECIMAL},
+			</if>
+			<if test="email != null">
+				#{email,jdbcType=VARCHAR},
+			</if>
+			<if test="phone != null">
+				#{phone,jdbcType=VARCHAR},
+			</if>
+			<if test="description != null">
+				#{description,jdbcType=VARCHAR},
+			</if>
+			<if test="loginFlag != null">
+				#{loginFlag,jdbcType=DECIMAL},
+			</if>
+			<if test="lastLoginTime != null">
+				#{lastLoginTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="createTime != null">
+				#{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="sid != null">
+				#{sid,jdbcType=VARCHAR},
+			</if>
+			<if test="mloginFlag != null">
+				#{mloginFlag,jdbcType=CHAR},
+			</if>
+			<if test="dutyType != null">
+				#{dutyType,jdbcType=VARCHAR},
+			</if>
+			<if test="parentId != null">
+				#{parentId,jdbcType=DECIMAL},
+			</if>
+			<if test="userStatus != null">
+				#{userStatus,jdbcType=DECIMAL},
+			</if>
+			<if test="viewTypeId != null">
+				#{viewTypeId,jdbcType=DECIMAL},
+			</if>
+			<if test="lockTime != null">
+				#{lockTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="freeze_flag != null">
+				#{freeze_flag,jdbcType=CHAR},
+			</if>
+		</trim>
+	</insert>
+
+	<update id="updateByPrimaryKeySelective" parameterType="cn.com.dwsoft.authority.pojo.User">
+		update UMS_USER
+		<set>
+			<if test="name != null">
+				LOGIN_NAME = #{name,jdbcType=VARCHAR},
+			</if>
+			<if test="password != null">
+				PASSWORD = #{password,jdbcType=VARCHAR},
+			</if>
+			<if test="realName != null">
+				REAL_NAME = #{realName,jdbcType=VARCHAR},
+			</if>
+			<if test="sex != null">
+				SEX = #{sex,jdbcType=DECIMAL},
+			</if>
+			<if test="email != null">
+				EMAIL = #{email,jdbcType=VARCHAR},
+			</if>
+			<if test="phone != null">
+				PHONE = #{phone,jdbcType=VARCHAR},
+			</if>
+			<if test="description != null">
+				DESCRIPTION = #{description,jdbcType=VARCHAR},
+			</if>
+			<if test="loginFlag != null">
+				LOGIN_FLAG = #{loginFlag,jdbcType=DECIMAL},
+			</if>
+			<if test="lastLoginTime != null">
+				LAST_LOGIN_TIME = #{lastLoginTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="createTime != null">
+				CREATE_TIME = #{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="sid != null">
+				SID = #{sid,jdbcType=VARCHAR},
+			</if>
+			<if test="mloginFlag != null">
+				MLOGIN_FLAG = #{mloginFlag,jdbcType=CHAR},
+			</if>
+			<if test="dutyType != null">
+				DUTY_TYPE = #{dutyType,jdbcType=VARCHAR},
+			</if>
+			<if test="parentId != null">
+				PARENT_ID = #{parentId,jdbcType=DECIMAL},
+			</if>
+			<if test="userStatus != null">
+				USER_STATUS = #{userStatus,jdbcType=DECIMAL},
+			</if>
+			<if test="viewTypeId != null">
+				VIEW_TYPE_ID = #{viewTypeId,jdbcType=DECIMAL},
+			</if>
+			<if test="lockTime != null">
+				LOCK_TIME = #{lockTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="freeze_flag != null">
+				FREEZE_FLAG = #{freeze_flag,jdbcType=CHAR},
+			</if>
+		</set>
+		where ID = #{id,jdbcType=VARCHAR}
+	</update>
+
+	<select id="login" parameterType="map" resultMap="BaseLoginResultMap">
+		SELECT
+		ID, ID userId, LOGIN_NAME, PASSWORD, REAL_NAME, SEX, EMAIL, PHONE,
+		DESCRIPTION, LOGIN_FLAG,
+		LAST_LOGIN_TIME, CREATE_TIME, SID, MLOGIN_FLAG, DUTY_TYPE, PARENT_ID, USER_STATUS,
+		LOCK_TIME, FREEZE_FLAG,USER_TYPE,VIEW_TYPE_ID
+		FROM UMS_USER
+		<trim prefix="where" prefixOverrides="and | or">
+			<if test="name != null and name != '' ">
+				and LOGIN_NAME = #{name}
+			</if>
+			<if test="phone != null and phone != '' ">
+			 and ( PHONE = #{phone} or LOGIN_NAME = #{phone})
+			</if>
+			<if test="pass != null and pass != '' ">
+				and PASSWORD = #{pass}
+			</if>
+			<if test="userId != null and userId != '' ">
+				and ID = #{userId}
+			</if>
+		</trim>
+	</select>
+    <select id="getUserList" resultType="cn.com.dwsoft.authority.pojo.User">
+        SELECT uu.*
+        FROM UMS_USER uu
+        WHERE 1 = 1
+        <if test="map.user.name != 'admin' || map.user.id != '1'">
+            and uu.login_name != 'admin'
+            and uu.id != '1'
+        </if>
+        <if test="(null != map.user.name and ''!= map.user.name and 'oracle'==map.dbType)">
+            AND UU.LOGIN_NAME LIKE '%'||#{map.user.name,jdbcType=VARCHAR} ||'%'
+        </if>
+        <if test="(null != map.user.real_name and '' != map.user.real_name and 'oracle'==map.dbType)">
+            AND UU.REAL_NAME LIKE '%'||#{map.user.real_name,jdbcType=VARCHAR} ||'%'
+        </if>
+        <if test="null != map.user.name and ''!= map.user.name">
+            AND UU.LOGIN_NAME LIKE concat('%',concat(#{map.user.name,jdbcType=VARCHAR},'%'))
+        </if>
+        <if test="(null != map.user.real_name and '' != map.user.real_name and 'mysql'==map.dbType)">
+            AND UU.REAL_NAME LIKE concat('%',#{map.user.real_name,jdbcType=VARCHAR},'%')
+        </if>
+        <if test="null != map.roleId and ''!=map.roleId ">
+            AND UU.ID IN (SELECT ur.user_id FROM UMS_USER_ROLE ur WHERE ur.role_id = #{map.roleId,jdbcType=VARCHAR})
+        </if>
+        <if test="null != map.user.phone and ''!= map.user.phone">
+            AND UU.PHONE = #{map.user.phone,jdbcType=VARCHAR}
+        </if>
+    </select>
+    <update id="updateloginTime" parameterType="java.lang.String">
+        UPDATE UMS_USER t
+        SET t.login_flag=1,
+            t.last_login_time=#{date}
+        WHERE t.id=#{id,jdbcType=DECIMAL}
+	</update>
+    <update id="lockUser">
+        UPDATE UMS_USER SET FREEZE_FLAG = #{freeze_flag, jdbcType=VARCHAR} WHERE LOGIN_NAME = #{name, jdbcType=NUMERIC}
+    </update>
+    <update id="resetPersonalPassword">
+        UPDATE UMS_USER SET PASSWORD = #{password, jdbcType=VARCHAR},PASSWORD_4A = #{password4A} WHERE ID = #{userId, jdbcType=NUMERIC}
+    </update>
+
+</mapper>

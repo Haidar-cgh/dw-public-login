@@ -1,0 +1,78 @@
+server:
+  servlet:
+    session:
+      timeout: 7200
+  port: ${public-port}
+
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: ${jdbc.url}
+    username: ${jdbc.username}
+    password: ${jdbc.password}
+    driver-class-name: ${jdbc.driver}
+    druid: #连接池统一配置，应用到所有的数据源
+      initial-size: 5
+      min-idle: 10
+      max-idle: 20
+      max-active: 50
+      max-wait: 10000
+      time-between-eviction-runs-millis: 10000
+      min-evictable-idle-time-millis: 300000
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-open-prepared-statements: 20
+      filter:
+        stat:
+          merge-sql: true
+          slow-sql-millis: 1000
+          log-slow-sql: true
+    hikari:
+      connection-test-query: select 1
+  servlet:
+    multipart:
+      max-file-size: 120MB
+      max-request-size: 200MB
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  jpa:
+    show-sql: true
+  profiles:
+    active: dev
+
+mybatis:
+  mapper-locations: classpath:cn.com.dwsoft/login/process/**/mapper/*.xml
+logging:
+  config: classpath:logback-spring.xml
+  level:
+    cn.com.dwsoft.login.process.zxtapp.task.mapper:  debug
+    cn.com.dwsoft.login.process.zxtapp.packet.mapper:  debug
+
+pagehelper:
+  reasonable: true
+  support-methods-arguments: true
+  pageSizeZero: true
+  params: count=countSql
+  offset-as-page-num: true
+  row-bounds-with-count: true
+nacos:
+  config:
+    #    server-addr: 127.0.0.1:8848
+    server-addr: 192.168.10.175:8848
+    namespace: zxt
+aliyun:
+  sms:
+    host: http://smsmsgs.market.alicloudapi.com
+    path: /smsmsgs
+    appcode: e5969585d39b4330bae286c852b9ea8d
+    sign: 1
+    skin: 1
+
+app-version:
+  code: 1
+  version: 1.0.1
+  path: "http://zxt.dwsoft.com.cn/download/app_20210127.apk"
+  content: "测试"
