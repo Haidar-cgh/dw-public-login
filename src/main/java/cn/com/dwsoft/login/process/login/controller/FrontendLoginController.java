@@ -14,7 +14,6 @@ import cn.com.dwsoft.authority.util.pwd.DesUtil;
 import cn.com.dwsoft.authority.util.pwd.PasswordHelper;
 import cn.com.dwsoft.authority.util.pwd.PasswordUtil;
 import cn.com.dwsoft.common.utils.cache.CacheService;
-import cn.com.dwsoft.logAop.annotation.DwLoginLog;
 import cn.com.dwsoft.logAop.annotation.DwLoginOutLog;
 import cn.com.dwsoft.login.config.LoginProcessCondition;
 import cn.com.dwsoft.login.process.common.controller.DwsoftControllerSupport;
@@ -173,12 +172,12 @@ public class FrontendLoginController extends DwsoftControllerSupport {
             boolean isLock = false;
             try {
                 User user = builder.getUser();
-                isLock = "0".equals(user.getFreeze_flag());
+                isLock = "0".equals(user. getFreezeFlag());
             } catch (Exception e1) {
                 Map<String,String> map = new HashMap<>();
                 map.put("name", username);
                 User user = umsUserImpl.login(map);
-                isLock = "0".equals(user.getFreeze_flag());
+                isLock = "0".equals(user.getFreezeFlag());
             }
             if (isLock){
                 err = LoginProcessCondition.USER_FREEZEF_LAG_MSG;
@@ -225,8 +224,8 @@ public class FrontendLoginController extends DwsoftControllerSupport {
                 umsUserImpl.resetPersonalPassword(password4A, password4A,userId);
             }
 
-            if (StringUtils.equalsIgnoreCase(user.getFreeze_flag(),"2")){
-                user.setFreeze_flag("1");
+            if (StringUtils.equalsIgnoreCase(user.getFreezeFlag(),"2")){
+                user.setFreezeFlag("1");
                 umsUserImpl.lockUser(user);
             }
             result.put("success", true);

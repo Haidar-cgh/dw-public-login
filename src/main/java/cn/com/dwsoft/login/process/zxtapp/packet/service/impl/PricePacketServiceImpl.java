@@ -21,7 +21,7 @@ import cn.com.dwsoft.login.process.zxtapp.util.BeanUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
  * @since jdk1.8
  */
 @Service
-@Log4j2
+@Slf4j
 public class PricePacketServiceImpl implements IPricePacketService {
 
     @Resource

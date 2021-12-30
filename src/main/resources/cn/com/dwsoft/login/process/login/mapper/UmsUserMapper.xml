@@ -3,8 +3,6 @@
 <mapper namespace="cn.com.dwsoft.login.process.login.mapper.UmsUserMapper">
 	<resultMap id="BaseResultMap" type="cn.com.dwsoft.authority.pojo.User">
 		<id column="ID" jdbcType="VARCHAR" property="id" />
-		<result column="ID" jdbcType="VARCHAR" property="userId" />
-		<result column="LOGIN_NAME" jdbcType="VARCHAR" property="name" />
 		<result column="PASSWORD" jdbcType="VARCHAR" property="password" />
 		<result column="REAL_NAME" jdbcType="VARCHAR" property="realName" />
 		<result column="SEX" jdbcType="VARCHAR" property="sex" />
@@ -14,23 +12,11 @@
 		<result column="LOGIN_FLAG" jdbcType="VARCHAR" property="loginFlag" />
 		<result column="LAST_LOGIN_TIME" jdbcType="TIMESTAMP" property="lastLoginTime" />
 		<result column="CREATE_TIME" jdbcType="TIMESTAMP" property="createTime" />
-		<result column="SID" jdbcType="VARCHAR" property="sid" />
-		<result column="MLOGIN_FLAG" jdbcType="CHAR" property="mloginFlag" />
-		<result column="DUTY_TYPE" jdbcType="VARCHAR" property="dutyType" />
-		<result column="PARENT_ID" jdbcType="DECIMAL" property="parentId" />
 		<result column="USER_STATUS" jdbcType="DECIMAL" property="userStatus" />
 		<result column="USER_TYPE" jdbcType="VARCHAR" property="userType" />
-		<result column="VIEW_TYPE_ID" jdbcType="VARCHAR" property="viewTypeId" />
-		<result column="LOCK_TIME" jdbcType="TIMESTAMP" property="lockTime" />
-		<result column="FREEZE_FLAG" jdbcType="CHAR" property="freeze_flag" />
-		<result column="DISPLAY_NAME" jdbcType="VARCHAR" property="displayName" />
-		<collection property="roleList" select="qryUseRoleList"
-			column="{userId=ID}" />
 	</resultMap>
     <resultMap id="BaseLoginResultMap" type="cn.com.dwsoft.authority.pojo.User">
         <id column="ID" jdbcType="DECIMAL" property="id" />
-        <result column="ID" jdbcType="DECIMAL" property="userId" />
-        <result column="LOGIN_NAME" jdbcType="VARCHAR" property="name" />
         <result column="PASSWORD" jdbcType="VARCHAR" property="password" />
         <result column="REAL_NAME" jdbcType="VARCHAR" property="realName" />
         <result column="SEX" jdbcType="DECIMAL" property="sex" />
@@ -40,18 +26,8 @@
         <result column="LOGIN_FLAG" jdbcType="DECIMAL" property="loginFlag" />
         <result column="LAST_LOGIN_TIME" jdbcType="TIMESTAMP" property="lastLoginTime" />
         <result column="CREATE_TIME" jdbcType="TIMESTAMP" property="createTime" />
-        <result column="SID" jdbcType="VARCHAR" property="sid" />
-        <result column="MLOGIN_FLAG" jdbcType="CHAR" property="mloginFlag" />
-        <result column="DUTY_TYPE" jdbcType="VARCHAR" property="dutyType" />
-        <result column="PARENT_ID" jdbcType="DECIMAL" property="parentId" />
         <result column="USER_STATUS" jdbcType="DECIMAL" property="userStatus" />
         <result column="USER_TYPE" jdbcType="VARCHAR" property="userType" />
-        <result column="VIEW_TYPE_ID" jdbcType="VARCHAR" property="viewTypeId" />
-        <result column="LOCK_TIME" jdbcType="TIMESTAMP" property="lockTime" />
-        <result column="FREEZE_FLAG" jdbcType="CHAR" property="freeze_flag" />
-        <result column="DISPLAY_NAME" jdbcType="VARCHAR" property="displayName" />
-        <result column="defaultDataType" jdbcType="VARCHAR" property="dataType" />
-        <result column="defaultSystemID" jdbcType="VARCHAR" property="systemID" />
 <!--        <collection property="roleList" select="qryUseRoleList"-->
 <!--                    column="{userId=ID}" />-->
     </resultMap>

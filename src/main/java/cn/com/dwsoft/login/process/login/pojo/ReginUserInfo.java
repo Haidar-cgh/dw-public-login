@@ -37,7 +37,19 @@ public class ReginUserInfo {
     private String password;
 
     @ApiModelProperty(name = "男女",value = MAN + "," + WO_MAN)
-    private int sex;
+    private String sex;
 
     private String email;
+
+    private String loginName;
+
+    private String realName;
+
+    private String phone;
+
+    private String encryptedData;
+
+    private String iv;
+
+    private String imagePath;
 }

@@ -3,7 +3,6 @@ package cn.com.dwsoft.login.config;
 import com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor;
 import com.github.pagehelper.PageInterceptor;
 import com.github.pagehelper.autoconfigure.PageHelperProperties;
-import org.mockito.internal.configuration.GlobalConfiguration;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,11 +16,6 @@ public class MybatisConfig {
     public PaginationInterceptor paginationInterceptor() {
         PaginationInterceptor paginationInterceptor = new PaginationInterceptor();
         return paginationInterceptor;
-    }
-    @Bean
-    public GlobalConfiguration globalConfiguration() {
-        GlobalConfiguration global = new GlobalConfiguration();
-        return global;
     }
 
     @Bean

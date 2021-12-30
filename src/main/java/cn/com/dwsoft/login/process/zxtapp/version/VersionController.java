@@ -7,7 +7,7 @@ import com.alibaba.fastjson.JSONObject;
 import io.swagger.annotations.Api;
 import lombok.Data;
 import lombok.Getter;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,7 +28,7 @@ import java.util.Properties;
 @RequestMapping("/version")
 @RestController
 @Api(tags = "获取版本信息接口")
-@Log4j2
+@Slf4j
 public class VersionController extends DwsoftControllerSupport {
 
     @Value("${app-version.code}")

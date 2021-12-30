@@ -11,12 +11,12 @@ import cn.com.dwsoft.login.process.zxtapp.util.Query;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-@Log4j2
+@Slf4j
 @Service("consumptionInfoService")
 public class ConsumptionInfoServiceImpl extends ServiceImpl<ConsumptionInfoDao, ConsumptionInfoEntity> implements ConsumptionInfoService {
     @Override

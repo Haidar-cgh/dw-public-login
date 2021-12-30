@@ -18,7 +18,7 @@ import com.alipay.api.request.AlipayUserInfoShareRequest;
 import com.alipay.api.response.AlipaySystemOauthTokenResponse;
 import com.alipay.api.response.AlipayUserInfoShareResponse;
 import io.swagger.annotations.Api;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,7 +42,7 @@ import java.util.Map;
 @RequestMapping("/pay")
 @RestController
 @Api(tags = "支付接口")
-@Log4j2
+@Slf4j
 public class PaymentController extends DwsoftControllerSupport {
 
     @Autowired
@@ -96,11 +96,11 @@ public class PaymentController extends DwsoftControllerSupport {
             if(user==null){
                 user=new User();
                 user.setId(SnowFlake.nextId(""));
-                user.setName(alipayUserInfoShareResponse.getUserId());
+                user.setLoginName(alipayUserInfoShareResponse.getUserId());
                 user.setRealName(alipayUserInfoShareResponse.getNickName());
                 user.setCreateTime(new Date());
-                user.setFreeze_flag("1");// 可登录状态
-                user.setUserStatus((short) 1); // 非激活
+                user.setFreezeFlag("1");// 可登录状态
+                user.setUserStatus("1"); // 非激活
                 user.setPassword(PasswordHelper.encryptPassword(null,"1"));
                 umsUserMapper.insertSelective(user);
 

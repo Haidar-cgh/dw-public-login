@@ -38,6 +38,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static cn.com.dwsoft.login.config.LoginProcessCondition.*;
+import static cn.com.dwsoft.login.config.LoginProcessCondition.PHONE_TYPE;
+
 /**
  * @author haider
  * @date 2021年12月23日 16:16
@@ -55,12 +58,27 @@ public class LoginController extends DwsoftControllerSupport {
         reginUserServices = new CopyOnWriteMap<>();
         reginUsers.forEach(reginUserService -> reginUserServices.put(reginUserService.getType(),reginUserService));
     }
+
     private User parserUser(ReginUserInfo info, UmsUserExtend extend){
         User user = new User();
         user.setPhone(extend.getPhone());
         user.setPassword(info.getPassword());
-        user.setSex(info.getSex());
+        try{
+            user.setSex(Integer.parseInt(info.getSex()));
+        }catch (Exception e){
+
+        }
         user.setEmail(info.getEmail());
+        if (StringUtils.isBlank(extend.getScreenName())){
+            extend.setScreenName(EmojiParser.parseToHtmlDecimal(info.getRealName()));
+        }else {
+            info.setRealName(EmojiParser.parseToHtmlDecimal(extend.getScreenName()));
+        }
+        if (StringUtils.isBlank(extend.getProfileImageUrl())){
+            extend.setProfileImageUrl(info.getImagePath());
+        }else {
+            info.setImagePath(extend.getProfileImageUrl());
+        }
         return user;
     }
 
@@ -94,7 +112,8 @@ public class LoginController extends DwsoftControllerSupport {
                 User user = parserUser(info,extend);
                 cacheService.del("AuthorRealmkey_"+extend.getPhone(),"MenuRealmKey_"+extend.getPhone());
                 // 动态注册
-                return reginUserService.regin(info, user,extend);
+                reginUserService.regin(info,user,extend);
+                return reginUserService.loginGetUser(phone,user.getPassword());
             } catch (LockedAccountException e) {
                 try {
                     TokenVerifyService builder = tokenFactory.getInstance().builder("", UserJwt.class);
@@ -139,14 +158,14 @@ public class LoginController extends DwsoftControllerSupport {
             user = umsUserImpl.getById(user.getId());
             Map<String,String> userMap=new HashMap<>();
             userMap.put("name",user.getPhone());
-            userMap.put("loginName",user.getName());
+            userMap.put("loginName",user.getLoginName());
             userMap.put("realName", EmojiParser.parseToUnicode(user.getRealName()));
             String onlyCode = user.getId();
             List<UmsImagePath> list = umsImagePath.query().eq("CODE", onlyCode).list();
             if (list.isEmpty()){
                 userMap.put("imagePath","");
             }else {
-                String imagePath = list.get(0).getImagePath();
+                String imagePath = list.get(0).getDocumentPath();
                 if(StringUtils.isBlank(imagePath)){
                     userMap.put("imagePath","");
                 }else{
@@ -246,6 +265,11 @@ public class LoginController extends DwsoftControllerSupport {
     @RequestMapping(value = "/updateUser",produces = "application/json")
     @ResponseBody
     @ApiOperation(value = "修改用户信息",httpMethod = "POST")
+//    @ApiImplicitParams({
+//            @ApiImplicitParam(name = "code", value = "验证码")
+//            , @ApiImplicitParam(name = "type", value = "类型")
+//            , @ApiImplicitParam(name = "email", value = "邮件")
+//    })
     public Result updateUser( ReginUserInfo info, UmsUserExtend extend){
         if (StringUtils.isBlank(info.getType())){
             return Result.failed("输入登录类型");
@@ -264,7 +288,7 @@ public class LoginController extends DwsoftControllerSupport {
                 if (StringUtils.isNotBlank(info.getEmail())){
                     user.setEmail(info.getEmail());
                 }
-                user.setSex(info.getSex());
+                user.setSex(Integer.parseInt(info.getSex()));
                 /**
                  * 修改微信,信息, 支付宝信息图片
                  */
@@ -330,6 +354,9 @@ public class LoginController extends DwsoftControllerSupport {
     @ResponseBody
     @RequestMapping(value = "/reSaveUser",method = {RequestMethod.POST})
     @ApiOperation(value = "重新保存用户",httpMethod = "POST")
+//    @ApiImplicitParams(
+//            @ApiImplicitParam(name = "phone",value = "手机号")
+//    )
     public Result reSaveUserExtend(UmsUserExtend extend){
         String phone = extend.getPhone();
         HashMap<String, String> map = new HashMap<>();
@@ -357,12 +384,12 @@ public class LoginController extends DwsoftControllerSupport {
             boolean isLock = false;
             try {
                 User user = builder.getUser();
-                isLock = "0".equals(user.getFreeze_flag());
+                isLock = "0".equals(user.getFreezeFlag());
             } catch (Exception e1) {
                 Map<String,String> map = new HashMap<>();
                 map.put("name", phone);
                 User user = umsUserImpl.login(map);
-                isLock = "0".equals(user.getFreeze_flag());
+                isLock = "0".equals(user.getFreezeFlag());
             }
             if (isLock){
                 err = "用户已经被冻结，请联系管理员!";
@@ -381,43 +408,43 @@ public class LoginController extends DwsoftControllerSupport {
      */
     @RequestMapping(value = "/restPwd")
     @ResponseBody
-//    @ApiOperation(value = "重置密码",httpMethod = "POST")
+    @ApiOperation(value = "重置密码",httpMethod = "POST")
 //    @ApiImplicitParams({
 //            @ApiImplicitParam(name = "phone",value = "手机号")
 //            ,@ApiImplicitParam(name = "password",value = "第一次密码")
 //            ,@ApiImplicitParam(name = "passwordTwo",value = "第二次密码")
 //    })
-    public Result resetPersonalPassword( ReginUserInfo info,  User user){
-        String phone = user.getPhone();
+    public Result resetPersonalPassword( ReginUserInfo info){
+        String phone = info.getPhone();
         if (!RegularUtil.isPhone(phone)){
             return Result.failed("请输入正确的手机号");
         }
         ReginUserService reginUserService = reginUserServices.get("phone");
         if (null != reginUserService){
-            if (StringUtils.isNotBlank(user.getPassword()) || StringUtils.isNotBlank(info.getPasswordTwo())){
-                if (!StringUtils.equalsIgnoreCase(user.getPassword(),info.getPasswordTwo())){
+            if (StringUtils.isNotBlank(info.getPassword()) || StringUtils.isNotBlank(info.getPasswordTwo())){
+                if (!StringUtils.equalsIgnoreCase(info.getPassword(),info.getPasswordTwo())){
                     return Result.failed("两次输入的密码不正确!");
                 }
             }
-            return reginUserService.rePassword(phone,info,user.getPassword());
+            return reginUserService.rePassword(phone,info,info.getPassword());
         }
         log.debug("注册信息为: "+ info);
         return Result.failed("服务器异常注册异常!");
     }
+
     @RequestMapping(value = "/restName")
     @ResponseBody
-//    @ApiOperation(value = "重置名称",httpMethod = "POST")
+    @ApiOperation(value = "重置名称",httpMethod = "POST")
 //    @ApiImplicitParams({
 //            @ApiImplicitParam(name = "loginName",value = "登录名【login_Name/phone】")
 //            ,@ApiImplicitParam(name = "realName",value = "名称")
 //    })
-    public Result resetLoginName( User user){
+    public Result resetLoginName(ReginUserInfo info){
         try {
-            String loginName = user.getLoginName();
+            String loginName = info.getLoginName();
             User umsUser = umsUserImpl.query().eq("LOGIN_NAME", loginName).list().get(0);
-            umsUser.setRealName(EmojiParser.parseToHtmlDecimal(user.getRealName()));
-            user.setId(umsUser.getId());
-            umsUserImpl.saveOrUpdate(user);
+            umsUser.setRealName(EmojiParser.parseToHtmlDecimal(info.getRealName()));
+            umsUserImpl.saveOrUpdate(umsUser);
             HashMap<String, String> hashMap = new HashMap<>();
             umsUser = umsUserImpl.query().eq("LOGIN_NAME", loginName).list().get(0);
             hashMap.put("realName", EmojiParser.parseToUnicode(umsUser.getRealName()));
@@ -434,8 +461,8 @@ public class LoginController extends DwsoftControllerSupport {
      */
     private void lockUser(String userName) {
         User user = new User();
-        user.setName(userName);
-        user.setFreeze_flag("0");
+        user.setLoginName(userName);
+        user.setFreezeFlag("0");
         try {
             umsUserImpl.lockUser(user);
         } catch (ServiceException se) {

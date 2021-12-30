@@ -1,6 +1,7 @@
 package cn.com.dwsoft.login.process.login.service;
 
 import cn.com.dwsoft.authority.controller.FrontendHttpAbstract;
+import cn.com.dwsoft.authority.exception.ServiceException;
 import cn.com.dwsoft.authority.pojo.User;
 import cn.com.dwsoft.authority.pojo.UserJwt;
 import cn.com.dwsoft.authority.token.AbstractTokenService;
@@ -15,6 +16,7 @@ import cn.com.dwsoft.common.utils.RegularUtil;
 import cn.com.dwsoft.common.utils.cache.CacheService;
 import cn.com.dwsoft.login.config.LoginProcessCondition;
 import cn.com.dwsoft.login.config.LoginVariableProperties;
+import cn.com.dwsoft.login.process.login.controller.HeadImage;
 import cn.com.dwsoft.login.process.login.mapper.UmsUserMapper;
 import cn.com.dwsoft.login.process.login.pojo.*;
 import cn.com.dwsoft.login.process.zxtapp.task.service.UserAddInfoService;
@@ -24,6 +26,7 @@ import cn.com.dwsoft.login.process.zxtapp.util.Result;
 import cn.com.dwsoft.login.util.FrontendImageUtil;
 import cn.com.dwsoft.login.util.SnowFlake;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.extension.conditions.query.QueryChainWrapper;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +37,6 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.beans.PropertyDescriptor;
 import java.io.File;
@@ -45,6 +47,10 @@ import java.util.List;
 @Data
 @Slf4j
 public abstract class AbstractReginUser implements ReginUserService {
+
+    @Override
+    public abstract String getType();
+
     @Autowired
     private CacheService cacheService;
 
@@ -63,14 +69,10 @@ public abstract class AbstractReginUser implements ReginUserService {
     @Autowired
     private UmsImagePathImpl umsImagePath;
 
-    @Value("${dw-public}")
-    private String dwPublic;
-
     @Autowired
     private LoginVariableProperties zxtConfig;
-
-    @Value("${ImageCode.codeLength}")
-    private int codeLength;
+    @Autowired
+    private HeadImage headImage;
 
     /**
      * 发送验证码 工具类
@@ -83,28 +85,30 @@ public abstract class AbstractReginUser implements ReginUserService {
     @Autowired
     private UmsUserImpl umsUserImpl;
 
-    @Override
-    public String getType() {
-        return LoginProcessCondition.PHONE_TYPE;
+    public List<User> getUserInfo(String phone,String loginName){
+        QueryChainWrapper<User> wq = umsUserImpl.query();
+        if (StringUtils.isBlank(phone)){//以手机号为主
+            wq.eq("PHONE",phone);
+        }else {
+            wq.eq("LOGIN_NAME",loginName);
+        }
+        return wq.list();
     }
 
     @Override
-    public Result regin(ReginUserInfo reginUserInfo, User user, UmsUserExtend extend) {
+    public synchronized void regin(ReginUserInfo reginUserInfo, User user, UmsUserExtend extend) {
         String phone = user.getPhone();
         if (!RegularUtil.isPhone(phone)){
-            return Result.failed("请输入正确的手机号");
+            throw new ServiceException("请输入正确的手机号");
         }
-        /**
-         * 验证码, 密码是否正确
-         */
         beforeRegin(reginUserInfo, user, extend);
 
-        List<User> users = umsUserImpl.query().eq("LOGIN_NAME",phone).list();
+        List<User> users = getUserInfo(phone,reginUserInfo.getLoginName());
         String password = LoginProcessCondition.PASS;
         if (StringUtils.isNotBlank(user.getPassword())){
             password = dePass(user.getPassword());
         }
-        boolean isRegin = false;
+
         /**
          * 第一次进入
          */
@@ -115,125 +119,130 @@ public abstract class AbstractReginUser implements ReginUserService {
              */
             user.setId(SnowFlake.nextId(""));
             user.setPhone(phone);
-            if (StringUtils.isBlank(user.getRealName())){
+            if (StringUtils.isNotBlank(reginUserInfo.getRealName())){
+                user.setRealName(EmojiParser.parseToHtmlDecimal(reginUserInfo.getRealName()));
+            }else {
                 user.setRealName(phone);
             }
             user.setCreateTime(new Date());
-            user.setLastLoginTime(new Date());
-            user.setFreeze_flag("1");// 可登录状态
-            user.setUserStatus((short) 1); // 非激活
+            user.setFreezeFlag("1");// 可登录状态
+            user.setUserStatus("1"); // 非激活
+            user.setUserType(getType());
             user.setPassword(encodePassword(password));
+            try {
+                user.setPassword_4A(new PasswordUtil().byte2hex(password, LoginProcessCondition.KEY));
+            } catch (Exception e) {
+            }
             user.setLoginName(phone);
 
             extend.setExtendId(SnowFlake.nextId(""));
             extend.setUserId(user.getId());
 
-            users = umsUserImpl.query().eq("LOGIN_NAME",phone).list();
-            if (users == null || users.isEmpty()){
-                isRegin = true;
-                umsUserImpl.save(user);
-                umsUserExtend.save(extend);
-                userAddInfoService.addUserInfo(phone);
+            umsUserImpl.save(user);
+            umsUserExtend.save(extend);
+            userAddInfoService.addUserInfo(phone);
+            if (StringUtils.isNotBlank(reginUserInfo.getImagePath())){
+                UmsImagePath imagePath = new UmsImagePath();
+                imagePath.setId(SnowFlake.nextId(""));
+                imagePath.setCode(user.getId());
+                imagePath.setIsImage("true");
+                imagePath.setIsDocument("true");
+                imagePath.setDocumentPath(reginUserInfo.getImagePath());
+                umsImagePath.save(imagePath);
             }
         }
-        /**
-         * 开始二次修改
-         */
-        if (!isRegin){
-            return Result.success("当前手机号已经注册.请转移到登录页");
-        }
         endRegin(reginUserInfo, user, extend);
-        return loginGetUser(phone,password);
     }
 
     @Override
     public Result loginGetUser(ReginUserInfo reginUserInfo, User user, UmsUserExtend extend) {
         String phone = user.getPhone();
-/*        if (!RegularUtil.isPhone(phone)){
-            return Result.failed("请输入正确的手机号");
-        }*/
         beforeLoginGetUser(reginUserInfo, user, extend);
-        List<User> users = umsUserImpl.query().eq("LOGIN_NAME",phone).list();
+
+        List<User> users = getUserInfo(phone,user.getLoginName());
         String password = LoginProcessCondition.PASS;
-        if (StringUtils.isNotBlank(user.getPassword())){
-            password = dePass(user.getPassword());
+        if (StringUtils.isNotBlank(user.getPassword_4A())){
+            password = dePass(user.getPassword_4A());
         }
 
-        /**
-         * 微信, 支付系列需要是判断是否注册过
-         */
-        boolean isRegin = false;
         if (users == null || users.isEmpty()){
-            user.setId(SnowFlake.nextId(""));
-            user.setPhone(phone);
-            if (StringUtils.isBlank(user.getRealName())){
-                user.setRealName(phone);
-            }
-            user.setCreateTime(new Date());
-            user.setLastLoginTime(new Date());
-//            user.setFreezeFlag("1");// 可登录状态
-            user.setFreeze_flag("1");// 可登录状态
-            user.setUserStatus((short) 1); // 非激活
-            user.setPassword(encodePassword(password));
-            user.setLoginName(phone);
+            log.error("当前登录用户为空");
+            return Result.failed("服务异常！");
+        }
 
+        User umsUser = users.get(0);// 只存在唯一的
+        umsUser.setLastLoginTime(new Date());
+        if (umsUser.getUserStatus().equals("1")){
+            umsUser.setUserStatus("2");
+        }
+
+        if (StringUtils.isNotBlank(reginUserInfo.getImagePath())){
+           try {
+               UmsUserExtend extend1 = umsUserExtend.query().eq("USER_ID", umsUser.getId()).list().get(0);
+               extend1.setProfileImageUrl(reginUserInfo.getImagePath());
+               umsUserExtend.saveOrUpdate(extend1);
+           } catch (Exception e) {
+           }
+        }
+
+        if (umsUser.getUserType() == null || !umsUser.getUserType().contains(getType())){//不包含当前登录类型 开始合并用户 以手机号
+            boolean success = mergeUser(reginUserInfo,user,extend);
+            if (success){
+                String userType = umsUser.getUserType();
+                if (StringUtils.isBlank(userType)){
+                    userType = getType();
+                }else {
+                    userType += "," +  getType();
+                }
+                umsUser.setUserType(userType);
+            }
+        }
+
+        List<UmsUserExtend> extendLists = umsUserExtend.query().eq("PHONE", phone).list();
+        if (null == extendLists || extendLists.isEmpty()){// 如果不存在则重新创建记录 在注册的时候已经保存 一般不会走
             extend.setExtendId(SnowFlake.nextId(""));
             extend.setUserId(user.getId());
-
-            users = umsUserImpl.query().eq("LOGIN_NAME",phone).list();
-            if (users == null || users.isEmpty()){
-                isRegin = true;
-                umsUserImpl.save(user);
-                umsUserExtend.save(extend);
-                userAddInfoService.addUserInfo(phone);
-            }
+            umsUserExtend.save(extend);
         }
-        if (!isRegin){
-            /**
-             * 更新用户信息
-             */
-            User umsUser = users.get(0);// 只存在唯一的
-            umsUser.setLastLoginTime(new Date());
-            if (umsUser.getUserStatus().equals(1)){
-                umsUser.setUserStatus((short)2);
-            }
-            List<UmsUserExtend> extendLists = umsUserExtend.query().eq("PHONE", phone).list();
-            if (null == extendLists || extendLists.isEmpty()){// 如果不存在则重新创建记录 在注册的时候已经保存 一般不会走
-                extend.setExtendId(SnowFlake.nextId(""));
-                extend.setUserId(user.getId());
-
-                umsUserExtend.save(extend);
-            }else {
-                UmsUserExtend umsUserExtend = extendLists.get(0);
-                if (!StringUtils.equalsIgnoreCase(extend.getUnionId(),umsUserExtend.getUnionId())){
-                    umsUserExtend.setUnionId(umsUserExtend.getUnionId());
-                }
-            }
-            umsUserImpl.saveOrUpdate(umsUser);
-        }
+        umsUserImpl.saveOrUpdate(umsUser);
         endLoginGetUser(reginUserInfo, user, extend);
         return loginGetUser(phone,password);
     }
 
+    /**
+     * 合并用户
+     * @return
+     */
+    public boolean mergeUser(ReginUserInfo info, User user, UmsUserExtend extend) {
+        String phone = info.getPhone();
+        try {
+            List<User> users = getUserInfo(phone, phone);
+            if (!users.isEmpty()){
+
+                return true;
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+        return false;
+    }
+
     @Override
-    public Result loginGetUser(String key, String password) {
+    public Result loginGetUser(String phone, String password) {
         HashMap<String, Object> map = new HashMap<>();
         /**
          * 为手机号的
          */
-        User umsUser = null;
-        UmsUserExtend extendUmsUserData = null;
         User user = null;
+        UmsUserExtend extendUmsUserData = null;
         try {
-            umsUser = umsUserImpl.query().eq("LOGIN_NAME",key).list().get(0);
-            extendUmsUserData = umsUserExtend.query().eq("USER_ID", umsUser.getId()).list().get(0);
-            user = umsUserImpl.getById(umsUser.getId());
+            user = getUserInfo(phone,phone).get(0);
+            extendUmsUserData = umsUserExtend.query().eq("USER_ID", user.getId()).list().get(0);
             user.setRealName(EmojiParser.parseToUnicode(user.getRealName()));
-            umsUser.setRealName(EmojiParser.parseToUnicode(umsUser.getRealName()));
         } catch (Exception e) {
             e.printStackTrace();
             try {
-                if (RegularUtil.isPhone(key)){
+                if (RegularUtil.isPhone(phone)){
                     return Result.failed("当前手机号没有注册是否进行注册!");
                 }
             } catch (Exception e1) {
@@ -241,15 +250,16 @@ public abstract class AbstractReginUser implements ReginUserService {
             return Result.failed("当前账号未注册!");
         }
 
-        if (umsUser!=null){
+        if (user!=null){
             Subject userSubject = SecurityUtils.getSubject();
-            UsernamePasswordToken token = new UsernamePasswordToken(key, password);
+            UsernamePasswordToken token = new UsernamePasswordToken(phone, password);
             userSubject.login(token);
 
             UserJwt userJwt = new UserJwt(SnowflakeIdUtil.generateId());
-            userJwt.setName(key);
+            userJwt.setName(phone);
             userJwt.setPassword(password);
             userJwt.setIp(TokenConfig.getIpAddr(FrontendHttpAbstract.getRequest()));
+            userJwt.setSingle(true);
             TokenBuilder instance = tokenFactory.getInstance();
             AbstractTokenService builder = instance.builder(userJwt);
             String NewToken = builder.getToken();
@@ -258,31 +268,31 @@ public abstract class AbstractReginUser implements ReginUserService {
             FrontendHttpAbstract.getResponse().setHeader("TOKEN", NewToken);
             FrontendHttpAbstract.getRequest().setAttribute("TOKEN",NewToken);
 
-            map.put("phone",umsUser.getPhone());
+            map.put("phone", user.getPhone());
             map.put("openId",extendUmsUserData.getOpenId());
             map.put("banding",true);
 
             String onlyCode = AppUserUtil.getOnlyCode(user);
             if (StringUtils.isNotBlank(extendUmsUserData.getProfileImageUrl())){
-                map.put("imagePath", extendUmsUserData.getProfileImageUrl());
+                map.put("imagePath", headImage.parserHeadImage(extendUmsUserData.getProfileImageUrl()));
             }else {
                 List<UmsImagePath> list = umsImagePath.query().eq("CODE", onlyCode).list();
                 if (list.isEmpty()){
-                    map.put("imagePath",dwPublic + File.separator + "image" + File.separator + "3.jpg");
+                    map.put("imagePath",headImage.parserHeadImage(LoginProcessCondition.HEAD_BASE_3_IMAGE_BEFORE));
                 }else {
-                    String imagePath = list.get(0).getImagePath();
-                    map.put("imagePath",dwPublic+"/head/getHeadImage?imagePath="+imagePath);
+                    String imagePath = list.get(0).getDocumentPath();
+                    map.put("imagePath",headImage.parserHeadImage(imagePath));
                 }
             }
 
-            map.put("id",umsUser.getId());
-            map.put("email",umsUser.getEmail());
-            map.put("realName",umsUser.getRealName());
+            map.put("id", user.getId());
+            map.put("email", user.getEmail());
+            map.put("realName", user.getRealName());
 
             /**
              * 删除登录错误信息
              */
-            builder.remainLoginDel(key);
+            builder.remainLoginDel(phone);
 
             return Result.success(map);
         }
@@ -338,19 +348,19 @@ public abstract class AbstractReginUser implements ReginUserService {
 
     @Override
     public String getImage(String phone) {
-        User user = umsUserImpl.query().eq("LOGIN_NAME", phone).list().get(0);
-        List<UmsUserExtend> umsUserExtends = umsUserExtend.query().eq("USER_ID", user.getId()).list();
-        if (!umsUserExtends.isEmpty()){
-            if ("wechat".equalsIgnoreCase(getType())) {
+        try {
+            User user = getUmsUserImpl().query().eq("LOGIN_NAME", phone).list().get(0);
+            List<UmsUserExtend> umsUserExtends = getUmsUserExtend().query().eq("USER_ID", user.getId()).list();
+            if (!umsUserExtends.isEmpty()){
                 String imageUrl = umsUserExtends.get(0).getProfileImageUrl();
                 if (StringUtils.isNotBlank(imageUrl)){
                     return imageUrl;
                 }
-            }else if ("alipay".equalsIgnoreCase(getType())){
-
             }
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
-        return dwPublic+"/head/getHeadImage";
+        return properties.getDwPublic()+"/head/getHeadImage";
     }
 
     /**

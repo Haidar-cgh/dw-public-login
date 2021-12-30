@@ -15,10 +15,10 @@ public interface ReginUserService {
     String getType();
 
     /**
-     * <p> 包含了 注册 以及第一次登录
+     * <p> 包含了 注册
      * @return
      */
-    Result regin(ReginUserInfo reginUserInfo, User user, UmsUserExtend extend);
+    void regin(ReginUserInfo reginUserInfo, User user, UmsUserExtend extend);
 
     Result loginGetUser(ReginUserInfo reginUserInfo, User user, UmsUserExtend extend);
 

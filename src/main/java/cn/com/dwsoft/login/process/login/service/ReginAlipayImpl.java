@@ -20,20 +20,13 @@ import java.util.List;
 @Slf4j
 @Data
 public class ReginAlipayImpl extends AbstractReginUser {
-
-    private String type;
+    @Override
+    public String getType() {
+        return LoginProcessCondition.ALIPAY_TYPE;
+    }
 
     @Autowired
     private UserAddInfoService userAddInfoService;
-
-    public ReginAlipayImpl(){
-        setType(LoginProcessCondition.ALIPAY_TYPE);
-    }
-
-    @Override
-    public Result regin(ReginUserInfo reginUserInfo, User user, UmsUserExtend extend) {
-        return super.regin(reginUserInfo,user, extend);
-    }
 
     @Override
     public String getImage(String phone) {
@@ -95,7 +88,7 @@ public class ReginAlipayImpl extends AbstractReginUser {
             user.setCreateTime(new Date());
             user.setLastLoginTime(new Date());
             user.setFreezeFlag("1");// 可登录状态
-            user.setUserStatus((short) 1); // 非激活
+            user.setUserStatus("1"); // 非激活
             user.setPassword(encodePassword(LoginProcessCondition.PASS));
 
             extend.setExtendId(SnowFlake.nextId(""));
@@ -114,8 +107,8 @@ public class ReginAlipayImpl extends AbstractReginUser {
              */
             User umsUser = users.get(0);// 只存在唯一的
             umsUser.setLastLoginTime(new Date());
-            if (umsUser.getUserStatus().equals(1)){
-                umsUser.setUserStatus((short)2);
+            if (umsUser.getUserStatus().equals("1")){
+                umsUser.setUserStatus("2");
             }
             List<UmsUserExtend> extendLists = getUmsUserExtend().query().eq("USER_ID", umsUser.getId()).list();
             if (null == extendLists || extendLists.isEmpty()){// 如果不存在则重新创建记录 在注册的时候已经保存 一般不会走

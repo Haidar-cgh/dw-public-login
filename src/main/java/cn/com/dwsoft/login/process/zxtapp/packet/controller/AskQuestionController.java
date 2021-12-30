@@ -8,7 +8,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -25,7 +25,7 @@ import java.util.List;
 @RequestMapping("/ask")
 @RestController
 @Api(tags = "调查问卷服务接口")
-@Log4j2
+@Slf4j
 public class AskQuestionController extends DwsoftControllerSupport {
 
     @Resource

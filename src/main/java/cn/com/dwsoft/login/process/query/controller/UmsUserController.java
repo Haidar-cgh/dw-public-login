@@ -42,10 +42,10 @@ public class UmsUserController extends DwsoftControllerSupport {
             Map<String,Object> map = new HashMap<String,Object>();
             try {
                 User u = getUser();
-                if(!"admin".equalsIgnoreCase(u.getName()) && "0".equals(u.getIsSysRole())){
-                    user.setUserId(u.getId());
+                if(!"admin".equalsIgnoreCase(u.getLoginName())){
+                    user.setId(u.getId());
                 }else {
-                    user.setUserId(null);
+//                    user.setUserId(null);
                 }
             } catch (Exception e) {
             }

@@ -9,7 +9,7 @@ import cn.com.dwsoft.login.process.zxtapp.task.service.ConsumptionInfoService;
 import cn.com.dwsoft.login.process.zxtapp.util.Result;
 import com.github.pagehelper.PageHelper;
 import io.swagger.annotations.*;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +27,7 @@ import java.util.List;
 @RequestMapping("/package")
 @RestController
 @Api(tags = "套餐推荐服务接口")
-@Log4j2
+@Slf4j
 public class PackagesPlanController extends DwsoftControllerSupport {
 
     @Resource

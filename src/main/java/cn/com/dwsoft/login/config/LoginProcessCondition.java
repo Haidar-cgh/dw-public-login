@@ -1,5 +1,6 @@
 package cn.com.dwsoft.login.config;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -14,13 +15,25 @@ public class LoginProcessCondition {
     public static final List<String> LOCALHOSTS = Arrays.asList("localhost","127.0.0.1");
 
     public static final String KEY = "DWSOFTMX";
-    // 手机号
+    /**
+     * 账号
+     */
+    public static final String LOGIN_NAME_TYPE = "loginName";
+    /**
+     *  手机号
+     */
     public static final String PHONE_TYPE = "phone";
-    // 支付宝
+    /**
+     * 支付宝
+     */
     public static final String ALIPAY_TYPE = "alipay";
-    // 微信
+    /**
+     * 微信
+      */
     public static final String WECHAT_TYPE = "wechat";
-    // 微信小程序
+    /**
+     * 微信小程序
+      */
     public static final String WECHAT_APPLET_TYPE = "applet";
 
     /**
@@ -33,4 +46,14 @@ public class LoginProcessCondition {
 
     public static final int WO_MAN = 0;
     public static final int MAN = 1;
+
+    // 保存附件上级目录
+    public static final String BASE_URL = "appLogin";
+    public static final String GRANT_TYPE = "authorization_code";
+    public static final String CLIENT_TYPE = "client_credential";
+
+    public static final String HEAD_IMAGE_BEFORE = "${dw-public}/head/getHeadImage?imagePath=";
+
+    public static final String HEAD_BASE_IMAGE_BEFORE = "${dw-public}/head/getHeadImage?" + File.separator + "image" + File.separator;
+    public static final String HEAD_BASE_3_IMAGE_BEFORE = "${dw-public}/head/getHeadImage?num=3";
 }

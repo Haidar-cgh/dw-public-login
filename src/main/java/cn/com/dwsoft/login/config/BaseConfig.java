@@ -47,6 +47,7 @@ public class BaseConfig {
         map.put("/regin","anon");
         map.put("/dologin","anon");
         map.put("/version/app","anon");
+        map.put("/**","anon");
         myShiroFilterFactoryBean.setFilterChainDefinitionMap(map);
         myShiroFilterFactoryBean.addMenuCodeWhiterUrl("/**");
         return myShiroFilterFactoryBean;

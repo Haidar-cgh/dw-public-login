@@ -23,23 +23,25 @@ import java.util.List;
 @Service
 @Data
 public class ReginUserPhoneImpl extends AbstractReginUser {
-    private String type;
-    public ReginUserPhoneImpl(){
-        setType(LoginProcessCondition.PHONE_TYPE);
-    }
     @Override
-    public Result regin(ReginUserInfo reginUserInfo, User user, UmsUserExtend extend) {
+    public String getType() {
+        return LoginProcessCondition.PHONE_TYPE;
+    }
+
+    @Override
+    public void regin(ReginUserInfo reginUserInfo, User user, UmsUserExtend extend) {
         /**
          * 注册 验证码
          */
         if (StringUtils.isNotBlank(reginUserInfo.getCode()) || StringUtils.isNotBlank(user.getPassword())){
-            return super.regin(reginUserInfo,user, extend);
+            super.regin(reginUserInfo,user, extend);
+//            return loginGetUser(user.getPhone(),loginGetUserPassword(user));
         }else {
             /**
              * 发送验证码
              */
             sendMessage(user.getPhone());
-            return Result.success(String.format("当前验证码有%d分种有效",getZxtConfig().getSaveMinute()));
+            throw new ServiceException(String.format("当前验证码有%d分种有效",getZxtConfig().getSaveMinute()));
         }
     }
 

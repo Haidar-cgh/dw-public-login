@@ -30,15 +30,29 @@ public class UmsImagePathHis {
      * 版本
      */
     private int version;
-
-    /**
-     * 图片地址
-     */
-    private String imagePath;
-
     /**
      * 创建时间
      */
     @JsonFormat(pattern = DateUtil.FULL_DATE_TO_THE_SECOND,timezone = "GMT+8")
     private Date createTime;
+
+    /**
+     * 是否是图片 类型
+     */
+    private String isImage;
+
+    /**
+     * 是否是 附件
+     */
+    private String isDocument;
+
+    /**
+     * 文件路径
+     */
+    private String documentPath;
+
+    /**
+     * 文件名称
+     */
+    private String documentName;
 }

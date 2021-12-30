@@ -1,6 +1,6 @@
 package cn.com.dwsoft.login.process.zxtapp.util;
 
-import org.apache.axis.encoding.Base64;
+import org.apache.shiro.codec.Base64;
 
 import java.security.KeyFactory;
 import java.security.PrivateKey;
@@ -41,7 +41,7 @@ public class SignUtils {
 
             byte[] signed = signature.sign();
 
-            return Base64.encode(signed);
+            return new String(Base64.encode(signed));
         } catch (Exception e) {
             e.printStackTrace();
         }
